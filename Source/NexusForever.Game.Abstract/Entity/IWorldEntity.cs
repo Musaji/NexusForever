@@ -43,6 +43,14 @@ namespace NexusForever.Game.Abstract.Entity
         uint MaxHealth { get; set; }
         uint Shield { get; set; }
         uint MaxShieldCapacity { get; set; }
+
+        float Endurance { get; set; }
+        float Focus { get; set; }
+        float Dash { get; set; }
+        float Resource1 { get; set; }
+        float Resource3 { get; set; }
+        float Resource4 { get; set; }
+
         uint Level { get; set; }
         uint InterruptArmor { get; set; }
         bool Sheathed { get; set; }
@@ -84,7 +92,17 @@ namespace NexusForever.Game.Abstract.Entity
         /// <summary>
         /// Invoked when <see cref="IWorldEntity"/> is cast activated.
         /// </summary>
-        void OnActivateCast(IPlayer activator);
+        void OnActivateCast(IPlayer activator, uint interactionId);
+
+        /// <summary>
+        /// Invoked when <see cref="IWorldEntity"/>'s activate succeeds.
+        /// </summary>
+        void OnActivateSuccess(IPlayer activator);
+
+        /// <summary>
+        /// Invoked when <see cref="IWorldEntity"/>'s activation fails.
+        /// </summary>
+        void OnActivateFail(IPlayer activator);
 
         /// <summary>
         /// Return a collection of <see cref="IItemVisual"/> for <see cref="IWorldEntity"/>.
@@ -152,7 +170,22 @@ namespace NexusForever.Game.Abstract.Entity
         /// <summary>
         /// Return the <see cref="uint"/> value of the supplied <see cref="Stat"/> as an <see cref="Enum"/>.
         /// </summary>
-        T? GetStatEnum<T>(Stat stat) where T : struct, Enum;
+        T? GetStatEnum<T>(Static.Entity.Stat stat) where T : struct, Enum;
+
+        /// <summary>
+        /// Get the current value of the <see cref="Stat"/> mapped to <see cref="Vital"/>.
+        /// </summary>
+        float GetVitalValue(Vital vital);
+
+        /// <summary>
+        /// Set the stat value for the provided <see cref="Vital"/>.
+        /// </summary>
+        void SetVital(Vital vital, float value);
+
+        /// <summary>
+        /// Modify the current stat value for the <see cref="Vital"/>.
+        /// </summary>
+        void ModifyVital(Vital vital, float value);
 
         /// <summary>
         /// Enqueue broadcast of <see cref="IWritable"/> to all visible <see cref="IPlayer"/>'s in range.

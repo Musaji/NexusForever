@@ -56,6 +56,9 @@ namespace NexusForever.WorldServer
                 .ConfigureServices((hb, sc) =>
                 {
                     // register world server service first since it needs to execute before the web host
+                    sc.AddHostedService<ConfigurationHostedService>();
+                    sc.AddHostedService<GameTableHostedService>();
+                    sc.AddHostedService<SpellHostedService>();
                     sc.AddHostedService<HostedService>();
                     sc.AddHostedService<NetworkInternalHandlerHostedService>();
                     sc.AddHostedService<OnlineHostedService>();

@@ -546,12 +546,15 @@ namespace NexusForever.GameTable
         [GameData]
         public GameTable<Spell4ConditionsEntry> Spell4Conditions { get; private set; }
 
+        [GameData]
         public GameTable<Spell4EffectGroupListEntry> Spell4EffectGroupList { get; private set; }
+
         public GameTable<Spell4EffectModificationEntry> Spell4EffectModification { get; private set; }
 
         [GameData]
         public GameTable<Spell4EffectsEntry> Spell4Effects { get; private set; }
 
+        [GameData]
         public GameTable<Spell4GroupListEntry> Spell4GroupList { get; private set; }
 
         [GameData]
@@ -582,13 +585,18 @@ namespace NexusForever.GameTable
         [GameData]
         public GameTable<Spell4TelegraphEntry> Spell4Telegraph { get; private set; }
 
+        [GameData]
         public GameTable<Spell4ThresholdsEntry> Spell4Thresholds { get; private set; }
+
         public GameTable<Spell4TierRequirementsEntry> Spell4TierRequirements { get; private set; }
 
         [GameData]
         public GameTable<Spell4ValidTargetsEntry> Spell4ValidTargets { get; private set; }
 
+        [GameData]
         public GameTable<Spell4VisualEntry> Spell4Visual { get; private set; }
+
+        [GameData]
         public GameTable<Spell4VisualGroupEntry> Spell4VisualGroup { get; private set; }
 
         [GameData]
@@ -598,6 +606,8 @@ namespace NexusForever.GameTable
 
         [GameData]
         public GameTable<SpellLevelEntry> SpellLevel { get; private set; }
+
+        [GameData]
         public GameTable<SpellPhaseEntry> SpellPhase { get; private set; }
 
         [GameData]
@@ -620,6 +630,7 @@ namespace NexusForever.GameTable
 
         [GameData]
         public GameTable<TaxiNodeEntry> TaxiNode { get; private set; }
+        [GameData]
         public GameTable<TaxiRouteEntry> TaxiRoute { get; private set; }
 
         [GameData]
@@ -662,7 +673,10 @@ namespace NexusForever.GameTable
         public GameTable<VeteranTierEntry> VeteranTier { get; private set; }
         public GameTable<VirtualItemEntry> VirtualItem { get; private set; }
         public GameTable<VisualEffectEntry> VisualEffect { get; private set; }
+
+        [GameData]
         public GameTable<VitalEntry> Vital { get; private set; }
+
         public GameTable<WaterSurfaceEffectEntry> WaterSurfaceEffect { get; private set; }
 
         [GameData]

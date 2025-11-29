@@ -22,9 +22,7 @@ using NexusForever.Game.Quest;
 using NexusForever.Game.RBAC;
 using NexusForever.Game.Reputation;
 using NexusForever.Game.Server;
-using NexusForever.Game.Spell;
 using NexusForever.Game.Storefront;
-using NexusForever.GameTable;
 using NexusForever.GameTable.Text.Filter;
 using NexusForever.GameTable.Text.Search;
 using NexusForever.Network.Message;
@@ -55,6 +53,7 @@ namespace NexusForever.WorldServer.Service
         private readonly IChatFormatManager chatFormatManager;
         private readonly IWorldManager worldManager;
 
+        // TODO: this really should be split into multiple HostedServices
         public HostedService(
             ILogger<IHostedService> log,
             IServiceProvider serviceProvider,
@@ -68,7 +67,7 @@ namespace NexusForever.WorldServer.Service
             IChatFormatManager chatFormatManager,
             IWorldManager worldManager)
         {
-            this.log               = log;
+            this.log = log;
 
             LegacyServiceProvider.Provider = serviceProvider;
 
@@ -92,8 +91,6 @@ namespace NexusForever.WorldServer.Service
         {
             log.LogInformation("Starting...");
 
-            SharedConfiguration.Instance.Initialise<WorldServerConfiguration>();
-
             DatabaseManager.Instance.Initialise(SharedConfiguration.Instance.Get<DatabaseConfig>());
             DatabaseManager.Instance.Migrate();
 
@@ -106,7 +103,6 @@ namespace NexusForever.WorldServer.Service
 
             scriptManager.Initialise();
 
-            await GameTableManager.Instance.Initialise();
             publicEventManager.Initialise();
             MapIOManager.Instance.Initialise();
             SearchManager.Instance.Initialise();
@@ -124,7 +120,6 @@ namespace NexusForever.WorldServer.Service
 
             AssetManager.Instance.Initialise();
             ItemManager.Instance.Initialise();
-            GlobalSpellManager.Instance.Initialise();
             GlobalQuestManager.Instance.Initialise();
 
             GlobalStorefrontManager.Instance.Initialise();

@@ -8,14 +8,7 @@ namespace NexusForever.WorldServer.Network.Message.Handler.Spell
     {
         public void HandleMessage(IWorldSession session, ClientSetStance innateChange)
         {
-            // TODO: Validate that index exists and which ability it is
-
-            session.Player.InnateIndex = innateChange.InnateIndex;
-
-            session.EnqueueMessageEncrypted(new ServerStanceChanged
-            {
-                InnateIndex = session.Player.InnateIndex
-            });
+            session.Player.SpellManager.SetInnate(innateChange.InnateIndex);
         }
     }
 }

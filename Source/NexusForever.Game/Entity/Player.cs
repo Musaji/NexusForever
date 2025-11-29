@@ -9,6 +9,7 @@ using NexusForever.Game.Abstract.Account;
 using NexusForever.Game.Abstract.Achievement;
 using NexusForever.Game.Abstract.Entity;
 using NexusForever.Game.Abstract.Entity.Movement;
+using NexusForever.Game.Abstract.Entity.Stat;
 using NexusForever.Game.Abstract.Guild;
 using NexusForever.Game.Abstract.Housing;
 using NexusForever.Game.Abstract.Map;
@@ -17,6 +18,7 @@ using NexusForever.Game.Abstract.Map.Lock;
 using NexusForever.Game.Abstract.Matching.Match;
 using NexusForever.Game.Abstract.Matching.Queue;
 using NexusForever.Game.Abstract.Reputation;
+using NexusForever.Game.Abstract.Spell;
 using NexusForever.Game.Achievement;
 using NexusForever.Game.Character;
 using NexusForever.Game.Chat;
@@ -74,7 +76,7 @@ namespace NexusForever.Game.Entity
             Flags       = 0x0020,
             Innate      = 0x0080,
             Sex         = 0x0100,
-            Race        = 0x0200,
+            Race        = 0x0200
         }
 
         private static readonly ILogger log = LogManager.GetCurrentClassLogger();
@@ -157,17 +159,6 @@ namespace NexusForever.Game.Entity
             }
         }
         private InputSets inputKeySet;
-
-        public byte InnateIndex
-        {
-            get => innateIndex;
-            set
-            {
-                innateIndex = value;
-                saveMask |= PlayerSaveMask.Innate;
-            }
-        }
-        private byte innateIndex;
 
         public override uint Level
         {
@@ -259,19 +250,25 @@ namespace NexusForever.Game.Entity
         private readonly IMatchingManager matchingManager;
         private readonly IMatchManager matchManager;
 
+        private readonly IStatUpdateManager<IPlayer> statUpdateManager;
+
         public Player(
             IMovementManager movementManager,
             IInternalMessagePublisher messagePublisher,
             IEntityFactory entityFactory,
             IMatchingManager matchingManager,
             IMatchManager matchManager,
+            IStatUpdateManager<IPlayer> statUpdateManager,
+            ISpellFactory spellFactory,
             ICurrencyManager currencyManager)
-            : base(movementManager)
+            : base(movementManager, statUpdateManager, spellFactory)
         {
             this.messagePublisher = messagePublisher;
-            this.entityFactory    = entityFactory;
-            this.matchingManager  = matchingManager;
-            this.matchManager     = matchManager;
+            this.entityFactory     = entityFactory;
+            this.matchingManager   = matchingManager;
+            this.matchManager      = matchManager;
+
+            this.statUpdateManager = statUpdateManager;
 
             // managers
             CurrencyManager = currencyManager;
@@ -299,25 +296,26 @@ namespace NexusForever.Game.Entity
             InputKeySet       = (InputSets)model.InputKeySet;
             Faction1          = (Faction)model.FactionId;
             Faction2          = (Faction)model.FactionId;
-            innateIndex       = model.InnateIndex;
             flags             = (CharacterFlag)model.Flags;
 
             CreateTime        = model.CreateTime;
             TimePlayedTotal   = model.TimePlayedTotal;
             TimePlayedLevel   = model.TimePlayedLevel;
 
+            statUpdateManager.Initialise(this);
+
             foreach (CharacterStatModel statModel in model.Stat)
             {
                 var statValue = new StatValue(statModel);
-                stats.Add((Stat)statModel.Stat, statValue);
+                stats.Add((Static.Entity.Stat)statModel.Stat, statValue);
             }
 
             //SetStat(Stat.Health, 1);
-            SetStat(Stat.Sheathed, 1u);
+            SetStat(Static.Entity.Stat.Sheathed, 1u);
             // temp
-            SetStat(Stat.Dash, 200F);
+            SetStat(Static.Entity.Stat.Dash, 200F);
             // sprint
-            SetStat(Stat.Resource0, 500f);
+            SetStat(Static.Entity.Stat.Resource0, 500f);
 
             CalculateDefaultProperties();
             SetBaseCharacterProperties();
@@ -530,12 +528,6 @@ namespace NexusForever.Game.Entity
                 {
                     model.Flags = (uint)Flags;
                     entity.Property(p => p.Flags).IsModified = true;
-                }
-
-                if ((saveMask & PlayerSaveMask.Innate) != 0)
-                {
-                    model.InnateIndex = InnateIndex;
-                    entity.Property(p => p.InnateIndex).IsModified = true;
                 }
 
                 if ((saveMask & PlayerSaveMask.Sex) != 0)
@@ -779,11 +771,6 @@ namespace NexusForever.Game.Entity
             AchievementManager.SendInitialPackets(null);
             Account.RewardPropertyManager.SendInitialPackets();
             ResurrectionManager.SendInitialPackets();
-
-            Session.EnqueueMessageEncrypted(new ServerStanceChanged
-            {
-                InnateIndex = InnateIndex
-            });
 
             Session.EnqueueMessageEncrypted(new ServerPhaseVisibilityWorldLocation
             {
