@@ -52,7 +52,7 @@ namespace NexusForever.Game.Abstract.Entity
         float Resource4 { get; set; }
 
         uint Level { get; set; }
-        uint InterruptArmor { get; set; }
+        float InterruptArmor { get; set; }
         bool Sheathed { get; set; }
 
         StandState StandState { get; set; }

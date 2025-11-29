@@ -148,17 +148,18 @@ namespace NexusForever.Game.Spell.Target
         /// <summary>
         /// Add damage to the effect.
         /// </summary>
-        public void AddDamage(DamageType damageType, uint damage)
+        public void AddDamage(IDamageDescription damage)
         {
-            // TODO: handle this correctly
-            Damage = new DamageDescription
-            {
-                DamageType      = damageType,
-                RawDamage       = damage,
-                RawScaledDamage = damage,
-                AdjustedDamage  = damage,
-                CombatResult    = CombatResult.Hit
-            };
+            Damage = damage;
+            //// TODO: handle this correctly
+            //Damage = new DamageDescription
+            //{
+            //    DamageType      = damageType,
+            //    RawDamage       = damage,
+            //    RawScaledDamage = damage,
+            //    AdjustedDamage  = damage,
+            //    CombatResult    = CombatResult.Hit
+            //};
         }
 
         /// <summary>

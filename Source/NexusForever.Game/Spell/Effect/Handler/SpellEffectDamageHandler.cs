@@ -43,7 +43,7 @@ namespace NexusForever.Game.Spell.Effect.Handler
 
             // DamageCalculator.Instance.CalculateDamage(caster, target, this, info, (DamageType)info.Entry.DamageType, damage);
 
-            info.AddDamage((DamageType)info.Entry.DamageType, 50);
+            info.AddDamage(info.Damage);
             info.Damage.ShieldAbsorbAmount = 25;
             info.Damage.AdjustedDamage = 50;
 

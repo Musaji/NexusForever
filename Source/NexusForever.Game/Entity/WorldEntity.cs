@@ -199,8 +199,8 @@ namespace NexusForever.Game.Entity
         [Vital(Vital.InterruptArmor)]
         public float InterruptArmor
         {
-            get => (float)(GetStatInteger(Static.Entity.Stat.InterruptArmor) ?? 0f);
-            set => SetStat(Static.Entity.Stat.InterruptArmor, (uint)value);
+            get => (float)(GetStatInteger(Static.Entity.Stat.InterruptArmour) ?? 0f);
+            set => SetStat(Static.Entity.Stat.InterruptArmour, (uint)value);
         }
 
         public virtual uint Level
@@ -209,11 +209,11 @@ namespace NexusForever.Game.Entity
             set => SetStat(Static.Entity.Stat.Level, value);
         }
 
-        public uint InterruptArmor
-        {
-            get => GetStatInteger(Stat.InterruptArmour) ?? 1u;
-            set => SetStat(Stat.InterruptArmour, value);
-        }
+        //public uint InterruptArmor
+        //{
+        //    get => GetStatInteger(Stat.InterruptArmour) ?? 1u;
+        //    set => SetStat(Stat.InterruptArmour, value);
+        //}
 
         public bool Sheathed
         {

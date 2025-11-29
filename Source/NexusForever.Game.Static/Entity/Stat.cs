@@ -52,8 +52,8 @@
         Unknown19           = 19,
         [Stat(StatType.Integer)]
         Shield              = 20,
-        [Stat(StatType.Integer)]
-        InterruptArmor      = 21,
+        [Stat(StatType.Float)]
+        InterruptArmour      = 21,
         [Stat(StatType.Integer)]
         Unknown22           = 22,
         [Stat(StatType.Float)]

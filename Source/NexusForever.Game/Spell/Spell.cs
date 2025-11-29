@@ -142,7 +142,7 @@ namespace NexusForever.Game.Spell
                 status = SpellStatus.Finished;
 
                 if (Parameters.PositionalUnitId > 0)
-                    Caster.GetVisible<WorldEntity>(Parameters.PositionalUnitId)?.RemoveFromMap();
+                    Caster.GetVisible<Entity.WorldEntity>(Parameters.PositionalUnitId)?.RemoveFromMap();
 
                 SendSpellFinish();
                 log.LogTrace($"Spell {Parameters.SpellInfo.Entry.Id} has finished.");
@@ -786,13 +786,13 @@ namespace NexusForever.Game.Spell
                 }
             }
 
-            foreach (ICombatLog combatLog in combatLogs)
-            {
-                Caster.EnqueueToVisible(new ServerCombatLog
-                {
-                    CombatLog = combatLog
-                }, true);
-            }
+            //foreach (ICombatLog combatLog in combatLogs)
+            //{
+            //    Caster.EnqueueToVisible(new ServerCombatLog
+            //    {
+            //        CombatLog = combatLog
+            //    }, true);
+            //}
 
             Caster.EnqueueToVisible(serverSpellGo, true);
 

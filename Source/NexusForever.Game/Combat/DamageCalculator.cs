@@ -2,7 +2,9 @@
 using NexusForever.Game.Abstract;
 using NexusForever.Game.Abstract.Entity;
 using NexusForever.Game.Abstract.Spell;
+using NexusForever.Game.Abstract.Spell.Target;
 using NexusForever.Game.Spell;
+using NexusForever.Game.Spell.Target;
 using NexusForever.Game.Static.Entity;
 using NexusForever.Game.Static.Spell;
 using NexusForever.GameTable;
@@ -36,11 +38,7 @@ namespace NexusForever.Game.Combat
         /// </remarks>
         public void CalculateDamage(IUnitEntity attacker, IUnitEntity victim, ISpell spell, ISpellTargetEffectInfo info)
         {
-            IDamageDescription damageDescription = new SpellTargetInfo.SpellTargetEffectInfo.DamageDescription
-            {
-                DamageType   = info.Entry.DamageType,
-                CombatResult = CombatResult.Hit
-            };
+            IDamageDescription damageDescription = info.Damage;
 
             var castData = new CombatLogCastData
             {
@@ -52,12 +50,12 @@ namespace NexusForever.Game.Combat
 
             if (CalculateDeflect(attacker, victim))
             {
-                info.DropEffect = true;
-                info.AddCombatLog(new CombatLogDeflect
-                    {
-                        BMultiHit = false,
-                        CastData  = castData
-                    });
+                //info.DropEffect = true;
+                //info.AddCombatLog(new CombatLogDeflect
+                //    {
+                //        BMultiHit = false,
+                //        CastData  = castData
+                //    });
                 return;
             }
 

@@ -48,7 +48,7 @@ namespace NexusForever.Game.Abstract.Spell.Target
         /// <summary>
         /// Add damage to the effect.
         /// </summary>
-        void AddDamage(DamageType damageType, uint damage);
+        void AddDamage(IDamageDescription damage);
 
         /// <summary>
         /// Set the effect duration.

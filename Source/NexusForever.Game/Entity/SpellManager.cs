@@ -686,10 +686,11 @@ namespace NexusForever.Game.Entity
 
         private void SendServerPlayerInnate()
         {
-            player.Session.EnqueueMessageEncrypted(new ServerPlayerInnate
-            {
-                InnateIndex = InnateIndex
-            });
+            log.Trace("[SpellManager] SendServerPlayerInnate called...");
+            //player.Session.EnqueueMessageEncrypted(new ServerPlayerInnate
+            //{
+            //    InnateIndex = InnateIndex
+            //});
         }
     }
 }
