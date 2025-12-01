@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.DependencyInjection;
 using NexusForever.Game.Abstract.Entity;
 using NexusForever.Game.Static.Entity;
 using NexusForever.Game.Static.Who;
@@ -7,7 +8,6 @@ using NexusForever.Network.Session;
 using NexusForever.Network.World.Message.Model.Who;
 using NexusForever.Network.World.Message.Model.Who.Parameter;
 using NexusForever.Shared;
-using System;
 using System.Collections.Generic;
 
 namespace NexusForever.WorldServer.Network.Message.Handler.Chat
@@ -24,14 +24,10 @@ namespace NexusForever.WorldServer.Network.Message.Handler.Chat
             Level
         }
 
-        private IWorldSession requestingSession;
-        private FilterStrategy inferredFilterStrategy;
-
         private readonly bool shouldSearchesIncludeThePlayerInitiatingSearch = true;
         private readonly bool shouldSearchesIncludeOppositeFaction = true;
         public void HandleMessage(IWorldSession requestingSession, ClientWhoRequest request)
         {
-            this.requestingSession = requestingSession;
             INetworkManager<IWorldSession> worldSessions = LegacyServiceProvider.Provider.GetService<INetworkManager<IWorldSession>>();
 
             List<ServerWhoResponse.WhoPlayer> whoResponsePlayerList = new List<ServerWhoResponse.WhoPlayer>();
@@ -42,17 +38,52 @@ namespace NexusForever.WorldServer.Network.Message.Handler.Chat
             {
                 if (currentRequestParameter == null)
                 {
-                    AddPlayerToList(whoResponsePlayerList, sessionCandidate);
+                    AddPlayerToList(requestingSession, sessionCandidate, whoResponsePlayerList);
                 }
                 else if (currentRequestParameter.Type == WhoParameterType.Combo)
                 {
                     WhoParameterCombo comboData = currentRequestParameter.Data as WhoParameterCombo;
-                    FilterByCombo(whoResponsePlayerList, sessionCandidate, comboData);
+                    FilterByCombo(requestingSession, sessionCandidate, whoResponsePlayerList, comboData);
                 }
                 else if (currentRequestParameter.Type == WhoParameterType.Level)
                 {
                     WhoParameterLevel levelData = currentRequestParameter.Data as WhoParameterLevel;
-                    FilterByLevel(whoResponsePlayerList, sessionCandidate, levelData);
+                    FilterByLevel(requestingSession, sessionCandidate, whoResponsePlayerList, levelData);
+                }
+                else if (currentRequestParameter.Type == WhoParameterType.Race)
+                {
+                    WhoParameterRace raceData = currentRequestParameter.Data as WhoParameterRace;
+                    FilterByArgs(requestingSession, sessionCandidate, whoResponsePlayerList, raceData.RaceId, sessionCandidate.Player.Race);
+                }
+                else if (currentRequestParameter.Type == WhoParameterType.Path)
+                {
+                    WhoParameterPath pathData = currentRequestParameter.Data as WhoParameterPath;
+                    FilterByArgs(requestingSession, sessionCandidate, whoResponsePlayerList, pathData.PathId, sessionCandidate.Player.Path);
+                }
+                else if (currentRequestParameter.Type == WhoParameterType.Class)
+                {
+                    WhoParameterClass classData = currentRequestParameter.Data as WhoParameterClass;
+                    FilterByArgs(requestingSession, sessionCandidate, whoResponsePlayerList, classData.ClassId, sessionCandidate.Player.Class);
+                }
+                else if (currentRequestParameter.Type == WhoParameterType.Zone)
+                {
+                    WhoParameterZone zoneData = currentRequestParameter.Data as WhoParameterZone;
+                    FilterByZone(requestingSession, sessionCandidate, whoResponsePlayerList, zoneData.WorldZoneId, sessionCandidate.Player);
+                }
+                else if (currentRequestParameter.Type == WhoParameterType.Player)
+                {
+                    WhoParameterPlayer playerData = currentRequestParameter.Data as WhoParameterPlayer;
+                    FilterByName(requestingSession, sessionCandidate, whoResponsePlayerList, playerData.PlayerName, sessionCandidate.Player.Name);
+                }
+                else if (currentRequestParameter.Type == WhoParameterType.Guild)
+                {
+                    WhoParameterGuild guildData = currentRequestParameter.Data as WhoParameterGuild;
+                    FilterByName(requestingSession, sessionCandidate, whoResponsePlayerList, guildData.GuildName, sessionCandidate.Player.GuildManager.Guild.Name);
+                }
+                else if (currentRequestParameter.Type == WhoParameterType.Faction)
+                {
+                    WhoParameterFaction factionData = currentRequestParameter.Data as WhoParameterFaction;
+                    FilterByArgs(requestingSession, sessionCandidate, whoResponsePlayerList, factionData.Faction2Id, sessionCandidate.Player.Faction2);
                 }
             }
 
@@ -62,19 +93,20 @@ namespace NexusForever.WorldServer.Network.Message.Handler.Chat
             });
         }
 
-        private void FilterByLevel(List<ServerWhoResponse.WhoPlayer> whoResponsePlayerList, IWorldSession sessionCandidate, WhoParameterLevel levelData)
+        private void FilterByLevel(IWorldSession requestingSession, IWorldSession sessionCandidate, List<ServerWhoResponse.WhoPlayer> whoResponsePlayerList, WhoParameterLevel levelData)
         {
             IPlayer candidatePlayer = sessionCandidate.Player;
             uint candidateLevel = candidatePlayer.Level;
             if (candidateLevel >= levelData.BottomLevel && candidateLevel < levelData.TopLevel)
             {
-                AddPlayerToList(whoResponsePlayerList, sessionCandidate);
+                AddPlayerToList(requestingSession, sessionCandidate, whoResponsePlayerList);
             }
         }
 
-        private void FilterByCombo(List<ServerWhoResponse.WhoPlayer> whoResponsePlayerList, IWorldSession sessionCandidate, WhoParameterCombo comboData)
+        private void FilterByCombo(IWorldSession requestingSession, IWorldSession sessionCandidate, List<ServerWhoResponse.WhoPlayer> whoResponsePlayerList, WhoParameterCombo comboData)
         {
-            inferredFilterStrategy = FilterStrategy.Name;
+            IPlayer candidatePlayer = sessionCandidate.Player;
+            FilterStrategy inferredFilterStrategy = FilterStrategy.Name;
 
             if (comboData.RaceId != Race.None)
             {
@@ -93,36 +125,54 @@ namespace NexusForever.WorldServer.Network.Message.Handler.Chat
                 inferredFilterStrategy = FilterStrategy.Zone;
             }
 
-            IPlayer candidatePlayer = sessionCandidate.Player;
             switch (inferredFilterStrategy)
             {
                 case FilterStrategy.Name:
-                    FilterByName(whoResponsePlayerList, sessionCandidate, comboData.SearchString, candidatePlayer.Name);
+                    FilterByName(requestingSession, sessionCandidate, whoResponsePlayerList, comboData.SearchString, candidatePlayer.Name);
                     break;
                 case FilterStrategy.Race:
-                    FilterByArgs(whoResponsePlayerList, sessionCandidate, comboData.RaceId, candidatePlayer.Race);
+                    FilterByArgs(requestingSession, sessionCandidate, whoResponsePlayerList, comboData.RaceId, candidatePlayer.Race);
                     break;
                 case FilterStrategy.Class:
-                    FilterByArgs(whoResponsePlayerList, sessionCandidate, comboData.ClassId, candidatePlayer.Class);
+                    FilterByArgs(requestingSession, sessionCandidate, whoResponsePlayerList, comboData.ClassId, candidatePlayer.Class);
                     break;
                 case FilterStrategy.Path:
-                    FilterByArgs(whoResponsePlayerList, sessionCandidate, comboData.PathId, candidatePlayer.Path);
+                    FilterByArgs(requestingSession, sessionCandidate, whoResponsePlayerList, comboData.PathId, candidatePlayer.Path);
                     break;
                 case FilterStrategy.Zone:
-                    FilterByArgs(whoResponsePlayerList, sessionCandidate, comboData.WorldZoneId, candidatePlayer.Zone.Id);
+                    FilterByZone(requestingSession, sessionCandidate, whoResponsePlayerList, comboData.WorldZoneId, candidatePlayer);
                     break;
             }
         }
 
-        private void FilterByArgs<T>(List<ServerWhoResponse.WhoPlayer> whoResponsePlayerList, IWorldSession sessionCandidate, T filterValue, T candidateValue)
+        private void FilterByZone(IWorldSession requestingSession, IWorldSession sessionCandidate, List<ServerWhoResponse.WhoPlayer> whoResponsePlayerList, uint worldZoneId, IPlayer candidatePlayer)
+        {
+            // WIP: It's not clear how ComboWhoRequests interact with the subzones. I have not been able to get a combo sub-zone request through via the client.
+            // For now, if you're in a subzone, we will compare your parent zone id with the search query, since combo search querys seem to only support these.
+            uint subZoneId = candidatePlayer.Zone.Id;
+            uint parentZoneId = candidatePlayer.Zone.ParentZoneId;
+
+            if (parentZoneId == 0)
+            {
+                FilterByArgs(requestingSession, sessionCandidate, whoResponsePlayerList, worldZoneId, candidatePlayer.Zone.Id);
+            }
+            else
+            {
+                FilterByArgs(requestingSession, sessionCandidate, whoResponsePlayerList, worldZoneId, candidatePlayer.Zone.ParentZoneId);
+            }
+        }
+
+        private bool FilterByArgs<T>(IWorldSession requestingSession, IWorldSession sessionCandidate, List<ServerWhoResponse.WhoPlayer> whoResponsePlayerList, T filterValue, T candidateValue)
         {
             if (EqualityComparer<T>.Default.Equals(filterValue, candidateValue))
             {
-                AddPlayerToList(whoResponsePlayerList, sessionCandidate);
+                AddPlayerToList(requestingSession, sessionCandidate, whoResponsePlayerList);
+                return true;
             }
+            return false;
         }
 
-        private void FilterByName(List<ServerWhoResponse.WhoPlayer> whoResponsePlayerList, IWorldSession sessionCandidate, string filterString, string candidateName)
+        private bool FilterByName(IWorldSession requestingSession, IWorldSession sessionCandidate, List<ServerWhoResponse.WhoPlayer> whoResponsePlayerList, string filterString, string candidateName)
         {
             // We want to filter in a case insensitive way
             string lowerFilterString = filterString.ToLower();
@@ -130,11 +180,13 @@ namespace NexusForever.WorldServer.Network.Message.Handler.Chat
 
             if (lowerCandidateName.IndexOf(lowerFilterString) != -1)
             {
-                AddPlayerToList(whoResponsePlayerList, sessionCandidate);
+                AddPlayerToList(requestingSession, sessionCandidate, whoResponsePlayerList);
+                return true;
             }
+            return false;
         }
 
-        private void AddPlayerToList(List<ServerWhoResponse.WhoPlayer> whoResponsePlayerList, IWorldSession sessionCandidate)
+        private void AddPlayerToList(IWorldSession requestingSession, IWorldSession sessionCandidate, List<ServerWhoResponse.WhoPlayer> whoResponsePlayerList)
         {
             if (requestingSession.Id == sessionCandidate.Id && (shouldSearchesIncludeThePlayerInitiatingSearch == false))
             {
@@ -142,16 +194,9 @@ namespace NexusForever.WorldServer.Network.Message.Handler.Chat
                 return;
             }
 
-            if (requestingSession.Player.Faction1 != sessionCandidate.Player.Faction1 && (shouldSearchesIncludeOppositeFaction == false))
-            {
-                // This code exits early if searching player's faction does not match the candidate player faction.
-                return;
-            }
-
             if (requestingSession.Player.Faction2 != sessionCandidate.Player.Faction2 && (shouldSearchesIncludeOppositeFaction == false))
             {
-                // I'm not sure what Faction2 is supposed to be. My best intuition is this might have some kind of relevance in PvP or dueling.
-                // In any case, I'm going to add this code here to cover my bases for now.
+                // Faction2 is the immutable faction. Faction1 can change based on the instance to support cross faction play.
                 // This code exits early if searching player's faction does not match the candidate player faction.
                 return;
             }
